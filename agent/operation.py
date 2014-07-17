@@ -12,6 +12,9 @@ class MessageKey:
     PLUGIN = 'plugin'
     DATA = 'data'
 
+    # Not naming as 'OPERATIONS' due to easily confusing with 'OPERATION'
+    OPERATION_LIST = 'operations'
+
     AGENT_ID = 'agent_id'
     RESPONSE_URI = 'response_uri'
     REQUEST_METHOD = 'request_method'
@@ -49,11 +52,16 @@ class OperationType:
 class Operation(object):
     """Represents an operation to be run by the agent."""
 
-    def __init__(self, message=None):
-        """Create an operation object from json message.
+    def __init__(self, message=None, op_dict=None):
+        """Create an operation object which represents an operation to be run
+        by the agent. An operation can also be loaded from a JSON message or a
+        dictionary which defines all the user-defined attributes.
 
         Args:
             message (str): JSON message containing operation details.
+            op_dict (dict): Dictionary containing keys that represent all
+                the attributes for this object. Similar/exactly to what you
+                retrieve from self.to_dict().
         """
         self.type = None
         self.id = None
@@ -65,12 +73,14 @@ class Operation(object):
 
         if message:
             self._load_message(message)
+        elif op_dict:
+            self.__dict__ = dict(self.__dict__.items() + op_dict.items())
         else:
             self.id = self._self_assigned_id()
 
     def _self_assigned_id(self):
         """Appends special string after uuid to denote self generated id.
-        
+
         Returns:
             (str): uuid generated from misc utils with a hardcoded string
             appended to the end to denote that it has been self generated.
@@ -100,9 +110,18 @@ class Operation(object):
 
         return self.type in savable
 
+    def to_dict(self):
+        """Get all user-defined attributes of this object.
+
+        Returns:
+            (dict): All user-defined attributes directly from the __dict__
+                method.
+        """
+        return self.__dict__
+
     def log_print(self):
-        """Give internal information about this operation so that it can be
-        easily identifiable when browsing logs.
+        """2-Tuple with some information specific to this Operation for logging
+        purposes.
 
         Returns:
             (str): Returns back a tuple wrapped as a string that has elements:
@@ -190,8 +209,8 @@ class ResultOperation(object):
         }
 
     def log_print(self):
-        """Give internal information about this operation so that it can be
-        easily identifiable when browsing logs.
+        """2-Tuple with some information specific to this Operation for logging
+        purposes.
 
         Returns:
             (str): Returns back a tuple wrapped as a string that has elements:

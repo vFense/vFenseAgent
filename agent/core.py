@@ -43,11 +43,19 @@ class AgentCore(object):
 
 
     def initialize(self):
-        config.initialize()
-        log.initialize()
+        try:
+            config.initialize()
+            log.initialize()
 
-        # TODO: Create a helper class to simplify starting/stopping this timer?
-        self._checkin_timer = threading.Timer(60, self._agent_checkin)
+            # TODO: Create a helper class to simplify starting/stopping this timer?
+            self._checkin_timer = threading.Timer(60, self._agent_checkin)
+
+        except Exception as e:
+            # TODO: Cannot continue from this point, bring agent down.
+            # Keep in mind that the OS might try to bring the daemon up again
+            # if the daemon has crashed/exited but not stopped through the
+            # proper commands.
+            print "Failure when initializing."
 
     def start(self):
         self._checkin_timer.start()
@@ -73,8 +81,7 @@ class AgentCore(object):
     #        log.exception(err)
 
     def process_server_message(self, message):
-        """Turn the message from the server into an Operation and place in the
-        operation queue to process.
+        """Process the message received from the server.
 
         Args:
             message (str): A JSON encoded string.
@@ -94,7 +101,7 @@ class AgentCore(object):
         #if not message_dict:
         #    return
 
-        #for op_dict in message_dict.get(MessageKey.DATA, []):
+        #for op_dict in message_dict.get(MessageKey.OPERATION_LIST, []):
         #    op_plugin = message_dict.get(MessageKey.PLUGIN)
 
         #    if not op_plugin:
